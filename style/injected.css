@@ -1,0 +1,9 @@
+/** 强调边框效果 **/
+.light-border {
+	transition: border linear .2s,box-shadow linear .5s !important;
+	-webkit-transition: border linear .2s,-webkit-box-shadow linear .5s !important;
+	outline: none !important;
+	border-color: rgba(0,0,255, 0.75) !important;
+	box-shadow: 0 0 8px rgba(0,0,255, 0.5) !important;
+	-webkit-box-shadow: 0 0 8px rgba(0,0,255, 0.3) !important;
+}

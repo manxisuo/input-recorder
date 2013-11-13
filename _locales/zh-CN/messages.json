@@ -1,0 +1,35 @@
+{
+	"extName" : {
+		"message": "输入域记录器"
+	},
+	"extDescription": {
+		"message": "记录下网页中的文本框、下拉框、单选框、复选框等输入组件的值，将来可以随时重新填写"
+	},
+	"hintAdd": {
+		"message": "输入名称"
+	},
+	"tipAdd": {
+		"message": "新增项目"
+	},
+	"tipDel": {
+		"message": "删除"
+	},
+	"tipUpdate": {
+		"message": "更新"
+	},
+	"tipRename": {
+		"message": "修改名称"
+	},
+	"tipRestore": {
+		"message": "填充"
+	},
+	"labelSavedItems": {
+		"message": "已保存项目："
+	},
+	"tip_confirm_delete": {
+		"message": "确定删除此项目吗？"
+	},
+	"tip_enter_name": {
+		"message": "请输入新的名称"
+	}
+}

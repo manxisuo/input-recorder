@@ -1,5 +1,7 @@
 
 $(function(){
+	initUIText();
+
 	$('#add').on('click', function() {
 		addNewItem();
 	});
@@ -22,11 +24,17 @@ $(function(){
 	loadItems();
 });
 
+function initUIText() {
+	$('#lblSavedItems').text(chrome.i18n.getMessage('labelSavedItems'));
+	$('#add').attr('title', chrome.i18n.getMessage('tipAdd'));
+	$('#newItemName').attr('placeholder', chrome.i18n.getMessage('hintAdd'));
+}
+
 function addNewItem() {
 	var name = $('#newItemName').val();
 	if (!$.trim(name))return;
 	
-	var id = new Date().getTime();
+	var id = new Date().getTime();	
 	
 	queryData(function(data) {
 	
@@ -45,7 +53,7 @@ function addNewItem() {
 }
 
 function delItem(id) {
-	var sure = window.confirm('确定删除吗?');
+	var sure = window.confirm(chrome.i18n.getMessage('tip_confirm_delete'));
 	
 	if (!sure) return;
 
@@ -57,7 +65,7 @@ function delItem(id) {
 }
 
 function editItemName(item) {
-	var desc = window.prompt('请输入新的描述',item.name);
+	var desc = window.prompt(chrome.i18n.getMessage('tip_enter_name'), item.name);
 	
 	if (!$.trim(desc))return;
 	
@@ -92,28 +100,32 @@ function makeItemUI(item) {
 	$('<span class="item-name" />').text(item.name).attr('title', item.name).appendTo(li);
 
 	// 填充链接
-	var doLink = $('<img src="img/insert.png" class="insert hand" title="填充" />');
+	var doLink = $('<img src="img/insert.png" class="insert hand" />');
+	doLink.attr('title', chrome.i18n.getMessage("tipRestore"));
 	doLink.on('click', function() {
 		handle($(this).parent().attr('id'));
 	});
 	li.append(doLink);
 	
 	// 编辑链接
-	var editLink = $('<img src="img/edit.png" class="edit hand" title="修改名称" />');
+	var editLink = $('<img src="img/edit.png" class="edit hand" />');
+	editLink.attr('title', chrome.i18n.getMessage("tipRename"));
 	editLink.on('click', function() {
 		editItemName(item);
 	});
 	li.append(editLink);
 	
 	// 更新链接
-	var updateLink = $('<img src="img/update.png" class="update hand" title="更新" />');
+	var updateLink = $('<img src="img/update.png" class="update hand" />');
+	updateLink.attr('title', chrome.i18n.getMessage("tipUpdate"));
 	updateLink.on('click', function() {
 		updateItem(item);
 	});
 	li.append(updateLink);
 	
 	// 删除链接
-	var delLink = $('<img src="img/delete.png" class="del hand" title="删除" />');
+	var delLink = $('<img src="img/delete.png" class="del hand" />');
+	delLink.attr('title', chrome.i18n.getMessage("tipDel"));
 	delLink.on('click', function() {
 		delItem(item.id);
 	});

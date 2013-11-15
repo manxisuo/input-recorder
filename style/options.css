@@ -1,0 +1,64 @@
+* {
+	font-family: 'WenQuanYi Micro Hei Mono', 'WenQuanYi Micro Hei', 'Microsoft Yahei Mono', 'Microsoft Yahei', sans-serif;
+}
+
+html {
+	background-color: #EEEEEE;
+}
+
+body {
+	margin: 0 auto;
+	max-width: 550px;
+}
+
+#files {
+	width: 0;
+	height: 0;
+}
+
+#exportLink {
+	display: none;
+}
+
+
+#s1, #s3 {
+	float: left;
+	clear: right;
+}
+#s2, #s4 {
+	float: right;
+	clear: right;
+	width: 70px;
+}
+
+#exportLink {
+	float: right;
+	clear: right;
+	margin-top: 10px;
+}
+
+#tip {
+	display: none;
+	float: left;
+	clear: left;
+	margin-top: 55px;
+	font-weight: bold;
+	color: blue;
+}
+.attention {
+	color: red;
+	font-size: small;
+}
+
+
+/*
+#container label {
+	float: left;
+	clear: right;
+}
+
+#container button, #container a {
+	float: right;
+	clear: right;
+}
+*/

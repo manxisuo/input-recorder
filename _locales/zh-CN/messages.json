@@ -11,6 +11,9 @@
 	"tipAdd": {
 		"message": "新增项目"
 	},
+	"tipOptions": {
+		"message": "设置"
+	},
 	"tipDel": {
 		"message": "删除"
 	},
@@ -31,5 +34,54 @@
 	},
 	"tip_enter_name": {
 		"message": "请输入新的名称"
+	},
+	"importLabel": {
+		"message": "导入项目"
+	},
+	"importAttention": {
+		"message": "(将会覆盖已存在项目！)"
+	},
+	"exportLabel": {
+		"message": "导出项目"
+	},
+	"exportLink": {
+		"message": "点击保存"
+	},
+	"importBtn": {
+		"message": "导入"
+	},
+	"exportBtn": {
+		"message": "导出"
+	},
+	"importTipSuccess": {
+		"message": "导入成功！"
+	},
+	"importTipErrFormat": {
+		"message": "格式错误！"
+	},
+	"optionsTitle": {
+		"message": "选项"
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }

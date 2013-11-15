@@ -1,9 +1,16 @@
 
 $(function(){
+	DbUtil.ensure();
+	
 	initUIText();
 
 	$('#add').on('click', function() {
 		addNewItem();
+	});
+	
+	$('#options').on('click', function() {
+		var url = chrome.extension.getURL('options.html');
+		chrome.tabs.create({url: url});	
 	});
 	
 	$('#refresh').on('click', function() {
@@ -21,13 +28,26 @@ $(function(){
 		}
 	});
 	
+	// 加载项目到UI
 	loadItems();
 });
 
 function initUIText() {
 	$('#lblSavedItems').text(chrome.i18n.getMessage('labelSavedItems'));
 	$('#add').attr('title', chrome.i18n.getMessage('tipAdd'));
+	$('#options').attr('title', chrome.i18n.getMessage('tipOptions'));
 	$('#newItemName').attr('placeholder', chrome.i18n.getMessage('hintAdd'));
+}
+
+function loadItems() {
+	var itemsUl = $('#items');
+	
+	itemsUl.html('');
+
+	DbUtil.getAllItems(function(item) {
+		var li = makeItemUI(item);
+		itemsUl.prepend(li);
+	});
 }
 
 function addNewItem() {
@@ -40,8 +60,7 @@ function addNewItem() {
 	
 		var item = {id:id, name: name, data : data};
 		
-		// 保存到localStorage
-		localStorage[id] = JSON.stringify(item);
+		DbUtil.setItem(item);
 		
 		// 保存到UI
 		var li = makeItemUI(item);
@@ -57,11 +76,11 @@ function delItem(id) {
 	
 	if (!sure) return;
 
-	// 从localStorage删除
-	delete localStorage[id];
-	
-	// 从UI删除
+	// UI
 	$('#' + id).remove();
+	
+	// Mem
+	DbUtil.deleteItem(id);
 }
 
 function editItemName(item) {
@@ -69,43 +88,42 @@ function editItemName(item) {
 	
 	if (!$.trim(desc))return;
 	
+	// UI
 	$('#' + item.id).children('.item-name').text(desc);
 	
+	// Mem
 	item.name = desc;
-	localStorage[item.id] = JSON.stringify(item);
+	DbUtil.setItem(item);
+	
 }
 
 function updateItem(item) {
 	queryData(function(data) {
 	
+		// Mem
 		item.data = data;
-		
-		// 保存到localStorage
-		localStorage[item.id] = JSON.stringify(item);
+		DbUtil.setItem(item);
 	});
 }
 
-function handle(id) {
-	var item = readItem(id);
+function fill(id) {
+	var item = DbUtil.getItem(id);
 	restoreData(item.data);
-}
-
-function readItem(id) {
-	var item = JSON.parse(localStorage[id]);
-	return item;
 }
 
 function makeItemUI(item) {
 	var li = $('<li />').attr('id', item.id).addClass('item-li');
 	$('<span class="item-name" />').text(item.name).attr('title', item.name).appendTo(li);
 
+	var iconSpan = $('<span class="icon-wrapper" />');
+
 	// 填充链接
 	var doLink = $('<img src="img/insert.png" class="insert hand" />');
 	doLink.attr('title', chrome.i18n.getMessage("tipRestore"));
 	doLink.on('click', function() {
-		handle($(this).parent().attr('id'));
+		fill($(this).parent().attr('id'));
 	});
-	li.append(doLink);
+	iconSpan.append(doLink);
 	
 	// 编辑链接
 	var editLink = $('<img src="img/edit.png" class="edit hand" />');
@@ -113,7 +131,7 @@ function makeItemUI(item) {
 	editLink.on('click', function() {
 		editItemName(item);
 	});
-	li.append(editLink);
+	iconSpan.append(editLink);
 	
 	// 更新链接
 	var updateLink = $('<img src="img/update.png" class="update hand" />');
@@ -121,7 +139,7 @@ function makeItemUI(item) {
 	updateLink.on('click', function() {
 		updateItem(item);
 	});
-	li.append(updateLink);
+	iconSpan.append(updateLink);
 	
 	// 删除链接
 	var delLink = $('<img src="img/delete.png" class="del hand" />');
@@ -129,23 +147,11 @@ function makeItemUI(item) {
 	delLink.on('click', function() {
 		delItem(item.id);
 	});
-	li.append(delLink);
+	iconSpan.append(delLink);
+	
+	li.append(iconSpan);
 	
 	return li;
-}
-
-function loadItems() {
-	var itemsUl = $('#items');
-	
-	itemsUl.html('');
-
-	var item;
-	for (id in localStorage) {
-		item = JSON.parse(localStorage[id]);
-
-		var li = makeItemUI(item);
-		itemsUl.prepend(li);
-	}
 }
 
 function queryData(callback) {

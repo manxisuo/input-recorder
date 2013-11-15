@@ -26,6 +26,7 @@ img {
 }
 #newItemName {
 	width: 280px;
+	height: 20px;
 }
 #items {
 	margin-top: 3px;
@@ -33,15 +34,22 @@ img {
 	padding-left: 15px;
 }
 
+.icon-wrapper {
+}
+
 #items li {
 	line-height: 30px;
 	border-bottom: 1px dashed black;
 }
 
-#add {
+#add, #options {
 	position: relative;
 	top: 5px;
 	width: 20px;
+}
+
+#options {
+	margin-left: 19px;
 }
 
 #help {
@@ -52,14 +60,11 @@ img {
 }
 
 .item-name {
+	display: inline-block;
+	width: 240px;
 	height: 34px;
 	vertical-align: bottom;
 	padding-top: 8px;
-}
-
-.item-li span {
-	display: inline-block;
-	width: 240px;
 	overflow-x: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;

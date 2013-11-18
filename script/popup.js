@@ -121,7 +121,7 @@ function makeItemUI(item) {
 	var doLink = $('<img src="img/insert.png" class="insert hand" />');
 	doLink.attr('title', chrome.i18n.getMessage("tipRestore"));
 	doLink.on('click', function() {
-		fill($(this).parent().attr('id'));
+		fill($(this).parent().parent().attr('id'));
 	});
 	iconSpan.append(doLink);
 	

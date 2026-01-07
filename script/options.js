@@ -1,109 +1,76 @@
 var IMPORT_TIP_SUCCESS = chrome.i18n.getMessage('importTipSuccess');
 var IMPORT_TIP_ERR_FORMAT = chrome.i18n.getMessage('importTipErrFormat');
+var exportObjectUrl = null;
 
-$(function() {
-	DbUtil.ensure();
-	
-	initUIText();
+document.addEventListener('DOMContentLoaded', function() {
+	DbUtil.ensure(function() {
+		initUIText();
 
-	$('#files').on('change', handleFileSelect);
-	
-	$('#import').on('click', function() {
-		$('#files').click();
-	});
-	
-	$('#export').on('click', function() {
-		window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem;
-		
-		window.requestFileSystem(window.TEMPORARY, 500*1024, onInitFs, errorHandler);
-		
-	});
-	
-	$('#exportLink').on('click', function(){
-		$(this).hide();
+		byId('files').addEventListener('change', handleFileSelect);
+
+		byId('import').addEventListener('click', function() {
+			byId('files').click();
+		});
+
+		byId('export').addEventListener('click', function() {
+			if (exportObjectUrl) {
+				URL.revokeObjectURL(exportObjectUrl);
+				exportObjectUrl = null;
+			}
+
+			DbUtil.getItemsString(function(content) {
+				var blob = new Blob([content], {type: 'application/json'});
+				exportObjectUrl = URL.createObjectURL(blob);
+
+				var exportLink = byId('exportLink');
+				var filename = 'input-recorder-backup-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+
+				exportLink.href = exportObjectUrl;
+				exportLink.download = filename;
+				exportLink.style.display = 'inline-flex';
+			});
+		});
+
+		byId('exportLink').addEventListener('click', function(){
+			// Important: don't revoke the blob URL synchronously on click.
+			// Some browsers may start the download slightly after the click handler returns.
+			var hrefToRevoke = exportObjectUrl;
+
+			// Hide after the click has a chance to trigger the download.
+			var self = this;
+			setTimeout(function() {
+				self.style.display = 'none';
+			}, 0);
+
+			setTimeout(function() {
+				if (hrefToRevoke && exportObjectUrl === hrefToRevoke) {
+					URL.revokeObjectURL(hrefToRevoke);
+					exportObjectUrl = null;
+				}
+			}, 1500);
+		});
 	});
 });
 
 function initUIText() {
 	document.title = chrome.i18n.getMessage('optionsTitle');
-	$('h1').text(document.title);
-	$('#importLabel').text(chrome.i18n.getMessage('importLabel'));
-	$('#importAttention').text(chrome.i18n.getMessage('importAttention'));
-	$('#exportLabel').text(chrome.i18n.getMessage('exportLabel'));
-	$('#exportLink').text(chrome.i18n.getMessage('exportLink'));
-	$('#import').text(chrome.i18n.getMessage('importBtn'));
-	$('#export').text(chrome.i18n.getMessage('exportBtn'));
-}
-
-function exportFile(fileEntry) {
-	var url = fileEntry.toURL();
-	var exportLink = $('#exportLink');
-	exportLink.attr('href', url).show();
-}
-
-function onInitFs(fs) {
-	var filename = 'log.txt';
-	
-	getFile(filename, fs, function(fileEntry) {
-		fileEntry.remove(function() {
-			createFile(filename, fs, function(fileEntry) {
-			
-				var content = DbUtil.getItemsString(false);
-				writeFile(fileEntry, content, function() {
-					exportFile(fileEntry);
-				});
-			});
-		}, errorHandler);
-	}, function() {
-		createFile(filename, fs, function(fileEntry) {
-			
-			var content = DbUtil.getItemsString(false);
-			writeFile(fileEntry, content, function() {
-				exportFile(fileEntry);
-			});
-		});
-	});
-}
-
-function getFile(filename, fs, successCallback, errorCallback) {
-	fs.root.getFile(filename, {create: false}, function(fileEntry) {
-		successCallback(fileEntry);
-	}, 
-	function(e) {
-		errorCallback(e);
-	});
-}
-
-function createFile(filename, fs, successCallback) {
-	fs.root.getFile(filename, {create: true, exclusive: true}, function(fileEntry) {	
-		successCallback(fileEntry);		
-	}, errorHandler);
-}
-
-function writeFile(fileEntry, content, successCallback) {
-	fileEntry.createWriter(function(fileWriter) {
-
-		fileWriter.onwriteend = function(e) {
-			successCallback();
-		};
-
-		fileWriter.onerror = function(e) {
-			
-		};
-
-		var blob = new Blob([content], {type: 'application/json'});
-
-		fileWriter.write(blob);
-
-	}, errorHandler);
+	byId('title').textContent = document.title;
+	byId('importLabel').textContent = chrome.i18n.getMessage('importLabel');
+	byId('importAttention').textContent = chrome.i18n.getMessage('importAttention');
+	byId('exportLabel').textContent = chrome.i18n.getMessage('exportLabel');
+	byId('exportLink').textContent = chrome.i18n.getMessage('exportLink');
+	byId('import').textContent = chrome.i18n.getMessage('importBtn');
+	byId('export').textContent = chrome.i18n.getMessage('exportBtn');
 }
 
 function showTip(msg) {
-	var tip = $('#tip');
-	tip.text(msg).fadeIn(1500);
-	setTimeout(function(){
-		tip.text(msg).fadeOut(500);
-	}, 2000);
+	var tip = byId('tip');
+	tip.textContent = msg;
+	tip.style.display = 'block';
+	clearTimeout(showTip._t);
+	showTip._t = setTimeout(function() {
+		tip.style.display = 'none';
+	}, 2200);
 }
 
 function handleFileSelect(e) {
@@ -113,47 +80,27 @@ function handleFileSelect(e) {
 	
 		var reader = new FileReader();
 		
-		reader.onload = (function(theFile) {
-			return function (e) {
-				var content = (e.target.result);
+		reader.onload = (function() {
+			return function (e2) {
+				var content = (e2.target.result);
 
-				if (DbUtil.isJSON(content)) {
-					DbUtil.setItemsString(content);
-					showTip(IMPORT_TIP_SUCCESS);
-				}
-				else {
+				if (!DbUtil.isJSON(content)) {
 					showTip(IMPORT_TIP_ERR_FORMAT);
+					return;
 				}
+
+				DbUtil.setItemsString(content, function() {
+					showTip(IMPORT_TIP_SUCCESS);
+					// allow importing the same file again
+					try { byId('files').value = ''; } catch (e3) {}
+				});
 			}
-		})(f);
+		})();
 		
 		reader.readAsText(f);
 	}
 }
 
-function errorHandler(e) {
-  var msg = '';
-
-  switch (e.code) {
-    case FileError.QUOTA_EXCEEDED_ERR:
-      msg = 'QUOTA_EXCEEDED_ERR';
-      break;
-    case FileError.NOT_FOUND_ERR:
-      msg = 'NOT_FOUND_ERR';
-      break;
-    case FileError.SECURITY_ERR:
-      msg = 'SECURITY_ERR';
-      break;
-    case FileError.INVALID_MODIFICATION_ERR:
-      msg = 'INVALID_MODIFICATION_ERR';
-      break;
-    case FileError.INVALID_STATE_ERR:
-      msg = 'INVALID_STATE_ERR';
-      break;
-    default:
-      msg = 'Unknown Error';
-      break;
-  };
-
-  console.log('Error: ' + msg);
+function byId(id) {
+	return document.getElementById(id);
 }

@@ -3,7 +3,7 @@
 }
 
 html {
-	background: -webkit-gradient(linear, left top, left bottom, from(rgb(47, 183, 189)), to(rgb(255, 255, 255)));
+	background: linear-gradient(180deg, rgb(47, 183, 189) 0%, rgb(255, 255, 255) 100%);
 }
 body {
 	min-width: 380px;
@@ -16,6 +16,29 @@ img {
 	padding-bottom: 10px;
 	border-bottom: 1px solid white;
 }
+
+#newItem.row {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+#tip {
+	display: none;
+	margin-top: 8px;
+	padding: 6px 8px;
+	font-size: 12px;
+	background: rgba(255, 255, 255, 0.75);
+	border: 1px solid rgba(255, 255, 255, 0.9);
+	border-radius: 4px;
+	color: #0b3d41;
+}
+
+#tip.error {
+	background: rgba(255, 235, 235, 0.85);
+	border-color: rgba(243, 163, 163, 0.9);
+	color: #7a1b1b;
+}
 #c2 {
 	margin-top: 10px;
 }
@@ -24,9 +47,19 @@ img {
 	height: 220px;
 	margin-top: 8px;
 }
+#empty {
+	display: none;
+	padding: 10px 8px;
+	color: rgba(0,0,0,0.55);
+	font-size: 12px;
+}
 #newItemName {
-	width: 280px;
-	height: 20px;
+	width: 260px;
+	height: 30px;
+	padding: 0 10px;
+	border-radius: 8px;
+	border: 1px solid rgba(0,0,0,0.15);
+	background: rgba(255,255,255,0.85);
 }
 #items {
 	margin-top: 3px;
@@ -35,36 +68,55 @@ img {
 }
 
 .icon-wrapper {
+	display: flex;
+	gap: 6px;
+	align-items: center;
 }
 
 #items li {
-	line-height: 30px;
-	border-bottom: 1px dashed black;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 6px 0;
+	line-height: 22px;
+	border-bottom: 1px dashed rgba(0,0,0,0.35);
 }
 
-#add, #options {
-	position: relative;
-	top: 5px;
-	width: 20px;
+.icon-btn {
+	border: 1px solid rgba(0,0,0,0.12);
+	background: rgba(255,255,255,0.7);
+	border-radius: 10px;
+	height: 32px;
+	width: 32px;
+	padding: 0;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
 }
 
-#options {
-	margin-left: 19px;
+.icon-btn.small {
+	height: 28px;
+	width: 28px;
+	border-radius: 8px;
 }
 
-#help {
-	position: relative;
-	top: 4px;
-	margin-left: 40px;
-	width: 20px;
+.icon-btn:hover {
+	background: rgba(255,255,255,0.95);
+}
+
+.icon {
+	width: 18px;
+	height: 18px;
 }
 
 .item-name {
 	display: inline-block;
-	width: 240px;
-	height: 34px;
-	vertical-align: bottom;
-	padding-top: 8px;
+	flex: 1;
+	min-width: 0;
+	height: 24px;
+	padding-top: 2px;
 	overflow-x: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -76,14 +128,6 @@ img {
 
 .hand:hover {
 	opacity:0.5;
-}
-
-.insert, .edit, .update {
-	width: 20px;
-	margin-right: 10px;
-}
-.del {
-	width: 20px;
 }
 
 /** 滚动条 **/

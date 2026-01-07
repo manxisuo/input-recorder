@@ -1,58 +1,48 @@
 
-$(function(){
-	DbUtil.ensure();
-	
-	initUIText();
+document.addEventListener('DOMContentLoaded', function() {
+	DbUtil.ensure(function() {
+		initUIText();
 
-	$('#add').on('click', function() {
-		addNewItem();
-	});
-	
-	$('#options').on('click', function() {
-		var url = chrome.extension.getURL('options.html');
-		chrome.tabs.create({url: url});	
-	});
-	
-	$('#refresh').on('click', function() {
+		byId('add').addEventListener('click', addNewItem);
+		byId('options').addEventListener('click', function() {
+			var url = chrome.runtime.getURL('options.html');
+			chrome.tabs.create({url: url});
+		});
+
+		byId('newItemName').addEventListener('keydown', function(e) {
+			if (e.key === 'Enter') addNewItem();
+		});
+
 		loadItems();
 	});
-	
-	$('#help').on('click', function() {
-		var url = chrome.extension.getURL('about.html');
-		chrome.tabs.create({url: url});	
-	});
-	
-	$('#newItemName').on('keypress', function(e) {
-		if(e.keyCode == 13) {
-			$('#add').click();
-		}
-	});
-	
-	// 加载项目到UI
-	loadItems();
 });
 
 function initUIText() {
-	$('#lblSavedItems').text(chrome.i18n.getMessage('labelSavedItems'));
-	$('#add').attr('title', chrome.i18n.getMessage('tipAdd'));
-	$('#options').attr('title', chrome.i18n.getMessage('tipOptions'));
-	$('#newItemName').attr('placeholder', chrome.i18n.getMessage('hintAdd'));
+	byId('lblSavedItems').textContent = chrome.i18n.getMessage('labelSavedItems');
+	byId('add').setAttribute('title', chrome.i18n.getMessage('tipAdd'));
+	byId('options').setAttribute('title', chrome.i18n.getMessage('tipOptions'));
+	byId('newItemName').setAttribute('placeholder', chrome.i18n.getMessage('hintAdd'));
+	byId('empty').textContent = chrome.i18n.getMessage('emptyState');
 }
 
 function loadItems() {
-	var itemsUl = $('#items');
-	
-	itemsUl.html('');
+	var itemsUl = byId('items');
+	itemsUl.innerHTML = '';
+	var count = 0;
 
 	DbUtil.getAllItems(function(item) {
 		var li = makeItemUI(item);
-		itemsUl.prepend(li);
+		itemsUl.insertBefore(li, itemsUl.firstChild);
+		count++;
+	}, function() {
+		byId('empty').style.display = count ? 'none' : 'block';
 	});
 }
 
 function addNewItem() {
-	var name = $('#newItemName').val();
-	if (!$.trim(name))return;
+	var input = byId('newItemName');
+	var name = (input.value || '').trim();
+	if (!name) return;
 	
 	var id = new Date().getTime();	
 	
@@ -64,10 +54,10 @@ function addNewItem() {
 		
 		// 保存到UI
 		var li = makeItemUI(item);
-		var itemsUl = $('#items');
-		itemsUl.prepend(li);
+		var itemsUl = byId('items');
+		itemsUl.insertBefore(li, itemsUl.firstChild);
 		
-		$('#newItemName').val('');
+		input.value = '';
 	});
 }
 
@@ -77,7 +67,8 @@ function delItem(id) {
 	if (!sure) return;
 
 	// UI
-	$('#' + id).remove();
+	var el = document.getElementById(String(id));
+	if (el && el.parentNode) el.parentNode.removeChild(el);
 	
 	// Mem
 	DbUtil.deleteItem(id);
@@ -86,10 +77,15 @@ function delItem(id) {
 function editItemName(item) {
 	var desc = window.prompt(chrome.i18n.getMessage('tip_enter_name'), item.name);
 	
-	if (!$.trim(desc))return;
+	desc = (desc || '').trim();
+	if (!desc) return;
 	
 	// UI
-	$('#' + item.id).children('.item-name').text(desc);
+	var row = document.getElementById(String(item.id));
+	if (row) {
+		var nameEl = row.querySelector('.item-name');
+		if (nameEl) nameEl.textContent = desc;
+	}
 	
 	// Mem
 	item.name = desc;
@@ -107,83 +103,157 @@ function updateItem(item) {
 }
 
 function fill(id) {
-	var item = DbUtil.getItem(id);
-	restoreData(item.data);
+	DbUtil.getItem(id, function(item) {
+		if (!item) return;
+		restoreData(item.data);
+	});
 }
 
 function makeItemUI(item) {
-	var li = $('<li />').attr('id', item.id).addClass('item-li');
-	$('<span class="item-name" />').text(item.name).attr('title', item.name).appendTo(li);
+	var li = document.createElement('li');
+	li.id = String(item.id);
+	li.className = 'item-li';
 
-	var iconSpan = $('<span class="icon-wrapper" />');
+	var nameSpan = document.createElement('span');
+	nameSpan.className = 'item-name';
+	nameSpan.textContent = item.name;
+	nameSpan.title = item.name;
+	li.appendChild(nameSpan);
 
-	// 填充链接
-	var doLink = $('<img src="img/insert.png" class="insert hand" />');
-	doLink.attr('title', chrome.i18n.getMessage("tipRestore"));
-	doLink.on('click', function() {
-		fill($(this).parent().parent().attr('id'));
-	});
-	iconSpan.append(doLink);
-	
-	// 编辑链接
-	var editLink = $('<img src="img/edit.png" class="edit hand" />');
-	editLink.attr('title', chrome.i18n.getMessage("tipRename"));
-	editLink.on('click', function() {
+	var iconSpan = document.createElement('span');
+	iconSpan.className = 'icon-wrapper';
+
+	iconSpan.appendChild(makeIconButton('img/insert.png', chrome.i18n.getMessage('tipRestore'), function() {
+		fill(item.id);
+	}));
+	iconSpan.appendChild(makeIconButton('img/edit.png', chrome.i18n.getMessage('tipRename'), function() {
 		editItemName(item);
-	});
-	iconSpan.append(editLink);
-	
-	// 更新链接
-	var updateLink = $('<img src="img/update.png" class="update hand" />');
-	updateLink.attr('title', chrome.i18n.getMessage("tipUpdate"));
-	updateLink.on('click', function() {
+	}));
+	iconSpan.appendChild(makeIconButton('img/update.png', chrome.i18n.getMessage('tipUpdate'), function() {
 		updateItem(item);
-	});
-	iconSpan.append(updateLink);
-	
-	// 删除链接
-	var delLink = $('<img src="img/delete.png" class="del hand" />');
-	delLink.attr('title', chrome.i18n.getMessage("tipDel"));
-	delLink.on('click', function() {
+	}));
+	iconSpan.appendChild(makeIconButton('img/delete.png', chrome.i18n.getMessage('tipDel'), function() {
 		delItem(item.id);
-	});
-	iconSpan.append(delLink);
-	
-	li.append(iconSpan);
-	
+	}));
+
+	li.appendChild(iconSpan);
 	return li;
 }
 
 function queryData(callback) {
 	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-		getSendMsgFunc()(tabs[0].id, {action: "query"}, function(response) {
-			if (response) {
-				callback(response.data);
+		if (!tabs || !tabs.length) return;
+		var tabId = tabs[0].id;
+
+		ensureInjected(tabId, function(ok) {
+			if (!ok) {
+				showTip(chrome.i18n.getMessage('tipPageNotSupported'), true);
+				return;
 			}
+
+			chrome.tabs.sendMessage(tabId, {action: "query"}, function(response) {
+				if (chrome.runtime.lastError || !response) {
+					showTip(chrome.i18n.getMessage('tipPageNotSupported'), true);
+					return;
+				}
+				callback(response.data);
+			});
 		});
 	});
 }
 
 function restoreData(data) {
 	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-		getSendMsgFunc()(tabs[0].id, {action: "restore", data: data}, function(response) {});
+		if (!tabs || !tabs.length) return;
+		var tabId = tabs[0].id;
+
+		ensureInjected(tabId, function(ok) {
+			if (!ok) {
+				showTip(chrome.i18n.getMessage('tipPageNotSupported'), true);
+				return;
+			}
+
+			chrome.tabs.sendMessage(tabId, {action: "restore", data: data}, function(resp) {
+				if (chrome.runtime.lastError || !resp) {
+					showTip(chrome.i18n.getMessage('tipPageNotSupported'), true);
+					return;
+				}
+
+				if (resp.report) {
+					var r = resp.report;
+					var applied = r.applied || 0;
+					var total = r.total || 0;
+					var skipped = r.skipped || 0;
+
+					var msg = chrome.i18n.getMessage('tipRestoreSummary', [String(applied), String(total), String(skipped)]);
+					showTip(msg, skipped > 0);
+				}
+			});
+		});
 	});
 }
 
-// 兼容低版本
-function getSendMsgFunc() {
-	var sendMsg;
-	if (isHighVersion()) {
-		sendMsg = chrome.tabs.sendMessage;
-	}
-	else {
-		sendMsg = chrome.tabs.sendRequest;
-	}
-	
-	return sendMsg;
+function showTip(msg, isError) {
+	var tip = byId('tip');
+	if (!tip) return;
+
+	if (isError) tip.classList.add('error');
+	else tip.classList.remove('error');
+
+	tip.textContent = msg;
+	tip.style.display = 'block';
+
+	clearTimeout(showTip._t);
+	showTip._t = setTimeout(function() {
+		tip.style.display = 'none';
+	}, 2500);
 }
 
-function isHighVersion() {
-	// return (chrome.runtime && chrome.runtime.onMessage && chrome.tabs.sendMessage);
-	return false;
+function byId(id) {
+	return document.getElementById(id);
+}
+
+function makeIconButton(iconSrc, title, onClick) {
+	var btn = document.createElement('button');
+	btn.type = 'button';
+	btn.className = 'icon-btn small';
+	btn.title = title;
+	btn.setAttribute('aria-label', title);
+	btn.addEventListener('click', onClick);
+
+	var img = document.createElement('img');
+	img.className = 'icon';
+	img.src = iconSrc;
+	img.alt = '';
+	btn.appendChild(img);
+	return btn;
+}
+
+function ensureInjected(tabId, callback) {
+	// Try a lightweight ping first to avoid repeatedly injecting CSS/script.
+	chrome.tabs.sendMessage(tabId, {action: "ping"}, function(resp) {
+		if (!chrome.runtime.lastError && resp && resp.ok) {
+			callback(true);
+			return;
+		}
+
+		// Insert CSS then content script.
+		chrome.scripting.insertCSS(
+			{target: {tabId: tabId}, files: ['style/injected.css']},
+			function() {
+				if (chrome.runtime.lastError) {
+					callback(false);
+					return;
+				}
+
+				chrome.scripting.executeScript(
+					{target: {tabId: tabId}, files: ['script/injected.js']},
+					function() {
+						if (chrome.runtime.lastError) callback(false);
+						else callback(true);
+					}
+				);
+			}
+		);
+	});
 }

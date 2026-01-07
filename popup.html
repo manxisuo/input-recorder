@@ -3,17 +3,21 @@
   <head>
 	<meta charset="UTF-8">
 	<link rel="stylesheet" type="text/css" href="style/main.css">
-	<script src="script/jquery-1.9.1.min.js"></script>
 	<script src="script/util.js"></script>
 	<script src="script/popup.js"></script>
   </head>
   <body>
 	<div id="c1">
-		<div id="newItem">
+		<div id="newItem" class="row">
 			<input type="text" id="newItemName" />
-			<img id="add" class="hand" src="img/add.png" />
-			<img id="options" class="hand" src="img/options.png" />
+			<button id="add" class="icon-btn" type="button" aria-label="Add">
+				<img class="icon" src="img/add.png" alt="">
+			</button>
+			<button id="options" class="icon-btn" type="button" aria-label="Options">
+				<img class="icon" src="img/options.png" alt="">
+			</button>
 		</div>
+		<div id="tip"></div>
 	</div>
 	<div id="c2">
 		<label id="lblSavedItems"></label>
@@ -21,6 +25,7 @@
 			<ul id="items">
 			
 			</ul>
+			<div id="empty"></div>
 		</div>
 	</div>
   </body>

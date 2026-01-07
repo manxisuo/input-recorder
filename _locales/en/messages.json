@@ -61,6 +61,15 @@
 	},
 	"optionsTitle": {
 		"message": "options"
+	},
+	"tipPageNotSupported": {
+		"message": "This page is not supported. Please open a normal http(s) webpage and try again."
+	},
+	"emptyState": {
+		"message": "No saved items yet."
+	},
+	"tipRestoreSummary": {
+		"message": "Restored $1/$2 fields. Skipped $3."
 	}
 	
 	

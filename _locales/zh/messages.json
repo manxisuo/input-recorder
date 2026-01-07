@@ -61,6 +61,15 @@
 	},
 	"optionsTitle": {
 		"message": "选项"
+	},
+	"tipPageNotSupported": {
+		"message": "当前页面不支持使用该扩展，请打开普通的 http(s) 网页后再试。"
+	},
+	"emptyState": {
+		"message": "还没有保存任何项目。"
+	},
+	"tipRestoreSummary": {
+		"message": "已填充 $1/$2 个字段，已跳过 $3 个。"
 	}
 	
 	

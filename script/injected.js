@@ -42,6 +42,8 @@ function queryData() {
 		var value;
 		if (tag === 'input' && (type === 'checkbox' || type === 'radio')) {
 			value = !!el.checked;
+		} else if (tag === 'select' && el.multiple) {
+			value = getSelectedValues(el);
 		} else {
 			value = el.value;
 		}
@@ -66,6 +68,7 @@ function restoreData(data) {
 		no_match: 0,
 		ambiguous: 0,
 		low_confidence: 0,
+		incompatible_type: 0,
 		invalid_selector: 0
 	};
 
@@ -105,6 +108,12 @@ function applyValue(el, value) {
 		return;
 	}
 
+	if (tag === 'select' && el.multiple && Array.isArray(value)) {
+		setSelectedValues(el, value);
+		dispatch(el, 'change');
+		return;
+	}
+
 	if (typeof value !== 'undefined') {
 		el.value = value;
 		dispatch(el, 'input');
@@ -116,6 +125,20 @@ function dispatch(el, type) {
 	try {
 		el.dispatchEvent(new Event(type, {bubbles: true}));
 	} catch (e) {}
+}
+
+function getSelectedValues(el) {
+	var values = [];
+	for (var i = 0; i < el.options.length; i++) {
+		if (el.options[i].selected) values.push(el.options[i].value);
+	}
+	return values;
+}
+
+function setSelectedValues(el, values) {
+	for (var i = 0; i < el.options.length; i++) {
+		el.options[i].selected = values.indexOf(el.options[i].value) !== -1;
+	}
 }
 
 function highlight(el) {
@@ -148,7 +171,13 @@ function findBestElementForRecord(rec) {
 	if (rec.sel) {
 		try {
 			var els = document.querySelectorAll(rec.sel);
-			if (els && els.length === 1) return {el: els[0], score: 100, reason: null};
+			if (els && els.length === 1) {
+				if (!rec.meta) return {el: els[0], score: 100, reason: null};
+
+				var bestSingle = scoreCandidates(els, rec);
+				if (bestSingle && bestSingle.el) return bestSingle;
+				return {el: null, reason: bestSingle && bestSingle.reason ? bestSingle.reason : 'low_confidence'};
+			}
 			if (els && els.length > 1) {
 				// Disambiguate with meta if available
 				var bestFromSel = scoreCandidates(els, rec);
@@ -167,7 +196,11 @@ function findBestElementForRecord(rec) {
 	// ID is the strongest key.
 	if (rec.meta.id) {
 		var byId = document.getElementById(rec.meta.id);
-		if (byId) return {el: byId, score: 100, reason: null};
+		if (byId) {
+			var bestById = scoreCandidates([byId], rec);
+			if (bestById && bestById.el) return bestById;
+			return {el: null, reason: bestById && bestById.reason ? bestById.reason : 'low_confidence'};
+		}
 	}
 
 	var tag = rec.meta.tag || null;
@@ -196,6 +229,7 @@ function scoreCandidates(nodeList, rec) {
 
 	var best = null;
 	var bestScore = -1;
+	var incompatibleCount = 0;
 
 	for (var i = 0; i < nodeList.length; i++) {
 		var el = nodeList[i];
@@ -205,9 +239,9 @@ function scoreCandidates(nodeList, rec) {
 		if (meta.tag && tag !== meta.tag) continue;
 
 		var type = (el.getAttribute('type') || '').toLowerCase();
-		if (meta.tag === 'input' && wantType && type && wantType !== type) {
-			// If record has a type, prefer the same type. (Don't hard reject if missing.)
-			// continue;
+		if (!isCompatibleField(el, meta)) {
+			incompatibleCount++;
+			continue;
 		}
 
 		var score = 0;
@@ -217,7 +251,7 @@ function scoreCandidates(nodeList, rec) {
 		var name = el.getAttribute('name') || '';
 		if (wantName && name === wantName) score += 60;
 
-		if (wantType && type === wantType) score += 10;
+		if (wantType && normalizeInputType(type) === normalizeInputType(wantType)) score += 10;
 
 		var aria = normalizeStr(el.getAttribute('aria-label'));
 		if (wantAria && aria && aria === wantAria) score += 30;
@@ -244,7 +278,54 @@ function scoreCandidates(nodeList, rec) {
 	// Require evidence to avoid wrong fills.
 	if (best && bestScore >= 20) return {el: best, score: bestScore, reason: null};
 	if (best) return {el: null, score: bestScore, reason: 'low_confidence'};
+	if (incompatibleCount > 0) return {el: null, score: -1, reason: 'incompatible_type'};
 	return {el: null, score: -1, reason: 'no_match'};
+}
+
+function isCompatibleField(el, meta) {
+	if (!meta) return true;
+
+	var tag = (el.tagName || '').toLowerCase();
+	if (meta.tag && tag !== meta.tag) return false;
+
+	if (tag === 'input') {
+		var actualType = normalizeInputType(el.getAttribute('type'));
+		var wantedType = normalizeInputType(meta.type);
+		if (!wantedType) return true;
+
+		return inputTypeCategory(actualType) === inputTypeCategory(wantedType);
+	}
+
+	if (tag === 'select' && typeof meta.multiple !== 'undefined') {
+		return !!el.multiple === !!meta.multiple;
+	}
+
+	return true;
+}
+
+function normalizeInputType(type) {
+	return String(type || 'text').toLowerCase();
+}
+
+function inputTypeCategory(type) {
+	type = normalizeInputType(type);
+
+	if (type === 'checkbox') return 'checkbox';
+	if (type === 'radio') return 'radio';
+
+	if (
+		type === 'button' ||
+		type === 'submit' ||
+		type === 'reset' ||
+		type === 'image' ||
+		type === 'file' ||
+		type === 'hidden' ||
+		type === 'password'
+	) {
+		return 'unsupported';
+	}
+
+	return 'text-like';
 }
 
 function buildCssPath(el) {
@@ -298,6 +379,7 @@ function getFieldMeta(el) {
 		ariaLabel: el.getAttribute('aria-label') || undefined,
 		role: el.getAttribute('role') || undefined,
 		autocomplete: el.getAttribute('autocomplete') || undefined,
+		multiple: tag === 'select' ? !!el.multiple : undefined,
 		label: getLabelText(el) || undefined,
 		dataTest: getDataTestId(el) || undefined
 	};

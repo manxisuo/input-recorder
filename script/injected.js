@@ -39,6 +39,7 @@ function queryData() {
 			if (type === 'hidden') continue;
 			if (type === 'submit' || type === 'button' || type === 'reset' || type === 'image') continue;
 		}
+		if (isSensitiveField(el)) continue;
 
 		var value;
 		if (tag === 'input' && (type === 'checkbox' || type === 'radio')) {
@@ -72,6 +73,7 @@ function restoreData(data) {
 		ambiguous: 0,
 		low_confidence: 0,
 		incompatible_type: 0,
+		sensitive_field: 0,
 		invalid_selector: 0
 	};
 
@@ -84,6 +86,12 @@ function restoreData(data) {
 			skipped++;
 			if (found && found.reason && reasons.hasOwnProperty(found.reason)) reasons[found.reason]++;
 			else reasons.no_match++;
+			continue;
+		}
+
+		if (isSensitiveField(found.el)) {
+			skipped++;
+			reasons.sensitive_field++;
 			continue;
 		}
 
@@ -345,6 +353,70 @@ function isCompatibleField(el, meta) {
 
 function isContentEditableField(el) {
 	return !!(el && el.isContentEditable);
+}
+
+function isSensitiveField(el) {
+	if (!el) return false;
+
+	var tag = (el.tagName || '').toLowerCase();
+	var type = normalizeInputType(el.getAttribute('type'));
+
+	if (tag === 'input' && (type === 'password' || type === 'file' || type === 'hidden')) return true;
+
+	var autocomplete = normalizeStr(el.getAttribute('autocomplete'));
+	if (autocomplete) {
+		if (autocomplete === 'one-time-code') return true;
+		if (autocomplete.indexOf('cc-') === 0) return true;
+	}
+
+	var text = normalizeSensitiveText([
+		el.id,
+		el.getAttribute('name'),
+		el.getAttribute('placeholder'),
+		el.getAttribute('aria-label'),
+		el.getAttribute('aria-placeholder'),
+		el.getAttribute('autocomplete'),
+		getLabelText(el)
+	].join(' '));
+
+	if (!text) return false;
+
+	return (
+		hasSensitiveToken(text, ['otp', 'totp', '2fa', 'mfa']) ||
+		hasSensitivePhrase(text, ['one time code', 'verification code', 'auth code', 'security code', '验证码']) ||
+		hasSensitivePhrase(text, ['credit card', 'card number', 'cc number', '信用卡']) ||
+		hasSensitiveToken(text, ['cvv', 'cvc', 'csc', 'cvn']) ||
+		hasSensitiveToken(text, ['ssn']) ||
+		hasSensitivePhrase(text, ['social security', '身份证']) ||
+		hasSensitivePhrase(text, ['api key', 'apikey', 'api token', 'access token', 'refresh token', 'bearer token']) ||
+		hasSensitivePhrase(text, ['client secret', 'private key', '密钥']) ||
+		hasSensitiveToken(text, ['secret', 'token'])
+	);
+}
+
+function normalizeSensitiveText(str) {
+	return String(str || '')
+		.replace(/([a-z])([A-Z])/g, '$1 $2')
+		.toLowerCase()
+		.replace(/[_-]+/g, ' ')
+		.replace(/[^a-z0-9\u4e00-\u9fff]+/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
+}
+
+function hasSensitiveToken(text, tokens) {
+	var padded = ' ' + text + ' ';
+	for (var i = 0; i < tokens.length; i++) {
+		if (padded.indexOf(' ' + tokens[i] + ' ') !== -1) return true;
+	}
+	return false;
+}
+
+function hasSensitivePhrase(text, phrases) {
+	for (var i = 0; i < phrases.length; i++) {
+		if (text.indexOf(phrases[i]) !== -1) return true;
+	}
+	return false;
 }
 
 function normalizeInputType(type) {

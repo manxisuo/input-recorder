@@ -77,7 +77,28 @@
 	"emptyState": {
 		"message": "还没有保存任何项目。"
 	},
+	"itemFieldCount": {
+		"message": "$1 个字段"
+	},
+	"unknownSource": {
+		"message": "未知来源"
+	},
+	"confirmRestoreDifferentSite": {
+		"message": "这个快照保存自 $1，但当前页面是 $2。仍然要在当前页面填充吗？"
+	},
+	"confirmRestoreUnknownSite": {
+		"message": "这个旧快照没有保存来源信息，当前页面是 $1。仍然要在当前页面填充吗？"
+	},
 	"tipRestoreSummary": {
 		"message": "已填充 $1/$2 个字段，已跳过 $3 个。"
+	},
+	"tipSaveSummary": {
+		"message": "已保存 $1 个字段。"
+	},
+	"tipUpdateSummary": {
+		"message": "已更新 $1 个字段。"
+	},
+	"tipNoFieldsCaptured": {
+		"message": "当前页面没有找到支持保存的字段。"
 	}	
 }

@@ -83,6 +83,14 @@ img {
 	border-bottom: 1px dashed rgba(0,0,0,0.35);
 }
 
+.item-text {
+	display: flex;
+	flex: 1;
+	min-width: 0;
+	flex-direction: column;
+	gap: 2px;
+}
+
 .icon-btn {
 	border: 1px solid rgba(0,0,0,0.12);
 	background: rgba(255,255,255,0.7);
@@ -112,14 +120,22 @@ img {
 }
 
 .item-name {
-	display: inline-block;
-	flex: 1;
 	min-width: 0;
 	height: 24px;
 	padding-top: 2px;
 	overflow-x: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+
+.item-meta {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 11px;
+	line-height: 14px;
+	color: rgba(0,0,0,0.55);
 }
 
 .hand {

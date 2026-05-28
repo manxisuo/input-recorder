@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Input Recorder Test Form</title>
+	<link rel="stylesheet" href="test.css">
+</head>
+<body>
+	<header class="page-header">
+		<div>
+			<h1>Input Recorder Test Form</h1>
+			<p>用于手动验证保存、恢复、字段匹配、敏感字段跳过和动态表单行为。</p>
+		</div>
+		<div class="actions">
+			<button type="button" id="fillDemo">填充示例数据</button>
+			<button type="button" id="clearForm">清空可见表单</button>
+			<button type="button" id="addDynamic">添加动态字段</button>
+			<button type="button" id="shuffleDynamic">重排动态字段</button>
+		</div>
+	</header>
+
+	<main>
+		<form id="testForm" autocomplete="on">
+			<section>
+				<h2>基础文本输入</h2>
+				<div class="grid">
+					<label>
+						姓名
+						<input id="fullName" name="fullName" type="text" placeholder="张三">
+					</label>
+					<label>
+						邮箱
+						<input id="email" name="email" type="email" placeholder="name@example.com" autocomplete="email">
+					</label>
+					<label>
+						电话
+						<input id="phone" name="phone" type="tel" placeholder="+86 138 0000 0000" autocomplete="tel">
+					</label>
+					<label>
+						网址
+						<input id="website" name="website" type="url" placeholder="https://example.com">
+					</label>
+					<label>
+						搜索关键词
+						<input id="search" name="search" type="search" placeholder="搜索内容">
+					</label>
+					<label>
+						数字
+						<input id="quantity" name="quantity" type="number" min="0" max="99" step="1">
+					</label>
+				</div>
+			</section>
+
+			<section>
+				<h2>日期、时间和颜色</h2>
+				<div class="grid">
+					<label>
+						日期
+						<input id="date" name="date" type="date">
+					</label>
+					<label>
+						时间
+						<input id="time" name="time" type="time">
+					</label>
+					<label>
+						月份
+						<input id="month" name="month" type="month">
+					</label>
+					<label>
+						周
+						<input id="week" name="week" type="week">
+					</label>
+					<label>
+						日期时间
+						<input id="datetime" name="datetime" type="datetime-local">
+					</label>
+					<label>
+						颜色
+						<input id="favoriteColor" name="favoriteColor" type="color">
+					</label>
+				</div>
+			</section>
+
+			<section>
+				<h2>长文本和选择控件</h2>
+				<div class="grid">
+					<label class="wide">
+						备注
+						<textarea id="notes" name="notes" rows="5" placeholder="输入多行内容"></textarea>
+					</label>
+					<label>
+						城市
+						<select id="city" name="city">
+							<option value="">请选择</option>
+							<option value="shanghai">上海</option>
+							<option value="beijing">北京</option>
+							<option value="shenzhen">深圳</option>
+							<option value="hangzhou">杭州</option>
+						</select>
+					</label>
+					<label>
+						多选标签
+						<select id="tags" name="tags" multiple size="4">
+							<option value="product">产品</option>
+							<option value="design">设计</option>
+							<option value="engineering">工程</option>
+							<option value="qa">测试</option>
+						</select>
+					</label>
+					<label>
+						范围
+						<input id="range" name="range" type="range" min="0" max="100">
+					</label>
+				</div>
+			</section>
+
+			<section>
+				<h2>复选框和单选框</h2>
+				<fieldset>
+					<legend>通知渠道</legend>
+					<label class="inline"><input name="notifyEmail" type="checkbox"> 邮件</label>
+					<label class="inline"><input name="notifySms" type="checkbox"> 短信</label>
+					<label class="inline"><input name="notifyPush" type="checkbox"> 推送</label>
+				</fieldset>
+				<fieldset>
+					<legend>优先级</legend>
+					<label class="inline"><input name="priority" type="radio" value="low"> 低</label>
+					<label class="inline"><input name="priority" type="radio" value="medium"> 中</label>
+					<label class="inline"><input name="priority" type="radio" value="high"> 高</label>
+				</fieldset>
+			</section>
+
+			<section>
+				<h2>匹配边界测试</h2>
+				<div class="grid">
+					<label>
+						重复 name A
+						<input name="duplicateName" type="text" placeholder="第一个 duplicateName">
+					</label>
+					<label>
+						重复 name B
+						<input name="duplicateName" type="text" placeholder="第二个 duplicateName">
+					</label>
+					<label>
+						无 id，仅 aria-label
+						<input name="ariaOnly" type="text" aria-label="Aria only field">
+					</label>
+					<label>
+						data-testid 字段
+						<input name="stableDataAttr" type="text" data-testid="stable-data-field">
+					</label>
+					<label>
+						禁用字段（应跳过）
+						<input id="disabledField" name="disabledField" type="text" value="disabled value" disabled>
+					</label>
+					<label>
+						只读字段
+						<input id="readonlyField" name="readonlyField" type="text" value="readonly value" readonly>
+					</label>
+				</div>
+				<input id="hiddenField" name="hiddenField" type="hidden" value="hidden value">
+			</section>
+
+			<section>
+				<h2>敏感字段测试</h2>
+				<p class="hint">当前扩展应至少跳过 password、file、hidden。后续敏感字段检测可用本区验证。</p>
+				<div class="grid">
+					<label>
+						密码（应跳过）
+						<input id="password" name="password" type="password" autocomplete="current-password">
+					</label>
+					<label>
+						一次性验证码
+						<input id="otp" name="otp" type="text" autocomplete="one-time-code" placeholder="123456">
+					</label>
+					<label>
+						信用卡号
+						<input id="creditCard" name="cc-number" type="text" autocomplete="cc-number">
+					</label>
+					<label>
+						CVV
+						<input id="cvv" name="cvv" type="text" autocomplete="cc-csc">
+					</label>
+					<label>
+						API Token
+						<input id="apiToken" name="api_token" type="text" placeholder="secret token">
+					</label>
+					<label>
+						文件（应跳过）
+						<input id="file" name="file" type="file">
+					</label>
+				</div>
+			</section>
+
+			<section>
+				<h2>动态字段和非标准编辑区</h2>
+				<div id="dynamicFields" class="grid"></div>
+				<label class="wide">
+					Contenteditable（当前版本可能不支持）
+					<div id="editableBio" class="editable" contenteditable="true" role="textbox" aria-label="Editable bio"></div>
+				</label>
+			</section>
+
+			<section>
+				<h2>表单按钮</h2>
+				<div class="actions">
+					<input type="submit" value="Submit input（应跳过）">
+					<input type="reset" value="Reset input（应跳过）">
+					<button type="submit">Submit button（应跳过）</button>
+					<button type="button" id="logValues">打印当前值</button>
+				</div>
+			</section>
+		</form>
+
+		<aside class="output">
+			<h2>当前表单快照</h2>
+			<pre id="output">{}</pre>
+		</aside>
+	</main>
+
+	<script src="test.js"></script>
+</body>
+</html>

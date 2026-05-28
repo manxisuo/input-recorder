@@ -77,7 +77,28 @@
 	"emptyState": {
 		"message": "No saved items yet."
 	},
+	"itemFieldCount": {
+		"message": "$1 fields"
+	},
+	"unknownSource": {
+		"message": "unknown"
+	},
+	"confirmRestoreDifferentSite": {
+		"message": "This snapshot was saved from $1, but the current page is $2. Fill it here anyway?"
+	},
+	"confirmRestoreUnknownSite": {
+		"message": "This older snapshot has no saved source. The current page is $1. Fill it here anyway?"
+	},
 	"tipRestoreSummary": {
 		"message": "Restored $1/$2 fields. Skipped $3."
+	},
+	"tipSaveSummary": {
+		"message": "Saved $1 fields."
+	},
+	"tipUpdateSummary": {
+		"message": "Updated $1 fields."
+	},
+	"tipNoFieldsCaptured": {
+		"message": "No supported fields were found on this page."
 	}	
 }

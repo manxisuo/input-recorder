@@ -46,16 +46,20 @@ function addNewItem() {
 	
 	var id = new Date().getTime();	
 	
-	queryData(function(data) {
-	
-		var item = {id:id, name: name, data : data};
+	queryData(function(data, tab) {
+		if (!ensureCapturedFields(data)) return;
+
+		var item = makeSnapshotItem(id, name, data, tab);
 		
-		DbUtil.setItem(item);
+		DbUtil.setItem(item, function() {
+			showTip(chrome.i18n.getMessage('tipSaveSummary', [String(item.fieldCount)]));
+		});
 		
 		// 保存到UI
 		var li = makeItemUI(item);
 		var itemsUl = byId('items');
 		itemsUl.insertBefore(li, itemsUl.firstChild);
+		byId('empty').style.display = 'none';
 		
 		input.value = '';
 	});
@@ -94,18 +98,24 @@ function editItemName(item) {
 }
 
 function updateItem(item) {
-	queryData(function(data) {
+	queryData(function(data, tab) {
+		if (!ensureCapturedFields(data)) return;
 	
 		// Mem
-		item.data = data;
-		DbUtil.setItem(item);
+		item = makeSnapshotItem(item.id, item.name, data, tab, item);
+		DbUtil.setItem(item, function() {
+			showTip(chrome.i18n.getMessage('tipUpdateSummary', [String(item.fieldCount)]));
+		});
+
+		var row = document.getElementById(String(item.id));
+		if (row && row.parentNode) row.parentNode.replaceChild(makeItemUI(item), row);
 	});
 }
 
 function fill(id) {
 	DbUtil.getItem(id, function(item) {
 		if (!item) return;
-		restoreData(item.data);
+		restoreItem(item);
 	});
 }
 
@@ -114,11 +124,25 @@ function makeItemUI(item) {
 	li.id = String(item.id);
 	li.className = 'item-li';
 
+	var textWrap = document.createElement('span');
+	textWrap.className = 'item-text';
+
 	var nameSpan = document.createElement('span');
 	nameSpan.className = 'item-name';
 	nameSpan.textContent = item.name;
 	nameSpan.title = item.name;
-	li.appendChild(nameSpan);
+	textWrap.appendChild(nameSpan);
+
+	var metaText = formatItemMeta(item);
+	if (metaText) {
+		var metaSpan = document.createElement('span');
+		metaSpan.className = 'item-meta';
+		metaSpan.textContent = metaText;
+		metaSpan.title = metaText;
+		textWrap.appendChild(metaSpan);
+	}
+
+	li.appendChild(textWrap);
 
 	var iconSpan = document.createElement('span');
 	iconSpan.className = 'icon-wrapper';
@@ -143,7 +167,8 @@ function makeItemUI(item) {
 function queryData(callback) {
 	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 		if (!tabs || !tabs.length) return;
-		var tabId = tabs[0].id;
+		var tab = tabs[0];
+		var tabId = tab.id;
 
 		ensureInjected(tabId, function(ok) {
 			if (!ok) {
@@ -156,16 +181,41 @@ function queryData(callback) {
 					showTip(chrome.i18n.getMessage('tipPageNotSupported'), true);
 					return;
 				}
-				callback(response.data);
+				callback(response.data || [], tab);
 			});
 		});
 	});
 }
 
-function restoreData(data) {
+function restoreItem(item) {
 	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 		if (!tabs || !tabs.length) return;
-		var tabId = tabs[0].id;
+		var currentSource = getTabSource(tabs[0]);
+		if (!confirmRestoreForSource(item, currentSource)) return;
+
+		restoreData(item.data || [], tabs[0]);
+	});
+}
+
+function confirmRestoreForSource(item, currentSource) {
+	var savedOrigin = item && item.origin ? item.origin : '';
+	var currentOrigin = currentSource && currentSource.origin ? currentSource.origin : '';
+
+	if (savedOrigin && currentOrigin && savedOrigin === currentOrigin) return true;
+
+	var messageKey = savedOrigin ? 'confirmRestoreDifferentSite' : 'confirmRestoreUnknownSite';
+	var savedLabel = savedOrigin || chrome.i18n.getMessage('unknownSource');
+	var currentLabel = currentOrigin || chrome.i18n.getMessage('unknownSource');
+
+	var args = savedOrigin ? [savedLabel, currentLabel] : [currentLabel];
+	return window.confirm(chrome.i18n.getMessage(messageKey, args));
+}
+
+function restoreData(data, tab) {
+	var run = function(tabs) {
+		tab = tab || (tabs && tabs.length ? tabs[0] : null);
+		if (!tab) return;
+		var tabId = tab.id;
 
 		ensureInjected(tabId, function(ok) {
 			if (!ok) {
@@ -190,7 +240,10 @@ function restoreData(data) {
 				}
 			});
 		});
-	});
+	};
+
+	if (tab) run([tab]);
+	else chrome.tabs.query({active: true, currentWindow: true}, run);
 }
 
 function showTip(msg, isError) {
@@ -211,6 +264,58 @@ function showTip(msg, isError) {
 
 function byId(id) {
 	return document.getElementById(id);
+}
+
+function ensureCapturedFields(data) {
+	if (data && data.length) return true;
+
+	showTip(chrome.i18n.getMessage('tipNoFieldsCaptured'), true);
+	return false;
+}
+
+function makeSnapshotItem(id, name, data, tab, existing) {
+	var now = new Date().toISOString();
+	var source = getTabSource(tab);
+
+	return {
+		id: id,
+		name: name,
+		data: data || [],
+		origin: source.origin,
+		url: source.url,
+		title: source.title,
+		createdAt: existing && existing.createdAt ? existing.createdAt : now,
+		updatedAt: now,
+		fieldCount: data && data.length ? data.length : 0
+	};
+}
+
+function getTabSource(tab) {
+	var url = tab && tab.url ? tab.url : '';
+	var origin = '';
+
+	try {
+		origin = url ? new URL(url).origin : '';
+	} catch (e) {
+		origin = '';
+	}
+
+	return {
+		origin: origin,
+		url: url,
+		title: tab && tab.title ? tab.title : ''
+	};
+}
+
+function formatItemMeta(item) {
+	var parts = [];
+	var origin = item && item.origin ? item.origin : '';
+	var fieldCount = typeof item.fieldCount === 'number' ? item.fieldCount : (item && item.data && item.data.length ? item.data.length : 0);
+
+	if (origin) parts.push(origin.replace(/^https?:\/\//, ''));
+	parts.push(chrome.i18n.getMessage('itemFieldCount', [String(fieldCount)]));
+
+	return parts.join(' · ');
 }
 
 function makeIconButton(iconSrc, title, onClick) {

@@ -22,9 +22,15 @@
 	<div id="c2">
 		<label id="lblSavedItems"></label>
 		<div id="c3">
-			<ul id="items">
-			
-			</ul>
+			<div class="snapshot-section">
+				<div id="currentSiteLabel" class="section-label"></div>
+				<ul id="currentItems"></ul>
+				<div id="emptyCurrent" class="empty-section"></div>
+			</div>
+			<div class="snapshot-section">
+				<button id="toggleOther" class="section-toggle" type="button" aria-expanded="false"></button>
+				<ul id="otherItems" class="collapsed"></ul>
+			</div>
 			<div id="empty"></div>
 		</div>
 	</div>

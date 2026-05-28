@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			if (e.key === 'Enter') addNewItem();
 		});
 
+		byId('toggleOther').addEventListener('click', toggleOtherItems);
+
 		loadItems();
 	});
 });
@@ -23,19 +25,26 @@ function initUIText() {
 	byId('options').setAttribute('title', chrome.i18n.getMessage('tipOptions'));
 	byId('newItemName').setAttribute('placeholder', chrome.i18n.getMessage('hintAdd'));
 	byId('empty').textContent = chrome.i18n.getMessage('emptyState');
+	byId('emptyCurrent').textContent = chrome.i18n.getMessage('emptyCurrentSite');
 }
 
 function loadItems() {
-	var itemsUl = byId('items');
-	itemsUl.innerHTML = '';
-	var count = 0;
+	getActiveTabSource(function(currentSource) {
+		var currentItems = [];
+		var otherItems = [];
+		var total = 0;
 
-	DbUtil.getAllItems(function(item) {
-		var li = makeItemUI(item);
-		itemsUl.insertBefore(li, itemsUl.firstChild);
-		count++;
-	}, function() {
-		byId('empty').style.display = count ? 'none' : 'block';
+		DbUtil.getAllItems(function(item) {
+			if (isCurrentSiteItem(item, currentSource)) currentItems.push(item);
+			else otherItems.push(item);
+			total++;
+		}, function() {
+			currentItems.sort(compareUpdatedDesc);
+			otherItems.sort(compareUpdatedDesc);
+			renderItemList(byId('currentItems'), currentItems);
+			renderItemList(byId('otherItems'), otherItems);
+			updateListState(currentSource, currentItems.length, otherItems.length, total);
+		});
 	});
 }
 
@@ -53,13 +62,8 @@ function addNewItem() {
 		
 		DbUtil.setItem(item, function() {
 			showTip(chrome.i18n.getMessage('tipSaveSummary', [String(item.fieldCount)]));
+			loadItems();
 		});
-		
-		// 保存到UI
-		var li = makeItemUI(item);
-		var itemsUl = byId('items');
-		itemsUl.insertBefore(li, itemsUl.firstChild);
-		byId('empty').style.display = 'none';
 		
 		input.value = '';
 	});
@@ -75,7 +79,7 @@ function delItem(id) {
 	if (el && el.parentNode) el.parentNode.removeChild(el);
 	
 	// Mem
-	DbUtil.deleteItem(id);
+	DbUtil.deleteItem(id, loadItems);
 }
 
 function editItemName(item) {
@@ -105,11 +109,56 @@ function updateItem(item) {
 		item = makeSnapshotItem(item.id, item.name, data, tab, item);
 		DbUtil.setItem(item, function() {
 			showTip(chrome.i18n.getMessage('tipUpdateSummary', [String(item.fieldCount)]));
+			loadItems();
 		});
-
-		var row = document.getElementById(String(item.id));
-		if (row && row.parentNode) row.parentNode.replaceChild(makeItemUI(item), row);
 	});
+}
+
+function renderItemList(listEl, items) {
+	listEl.innerHTML = '';
+	for (var i = 0; i < items.length; i++) {
+		listEl.appendChild(makeItemUI(items[i]));
+	}
+}
+
+function updateListState(currentSource, currentCount, otherCount, total) {
+	var currentOrigin = currentSource && currentSource.origin ? currentSource.origin.replace(/^https?:\/\//, '') : chrome.i18n.getMessage('unknownSource');
+	byId('currentSiteLabel').textContent = chrome.i18n.getMessage('currentSiteSnapshots', [currentOrigin, String(currentCount)]);
+	byId('empty').style.display = total ? 'none' : 'block';
+	byId('emptyCurrent').style.display = total && currentCount ? 'none' : (total ? 'block' : 'none');
+	updateOtherToggle(otherCount);
+}
+
+function updateOtherToggle(otherCount) {
+	var toggle = byId('toggleOther');
+	var list = byId('otherItems');
+	var expanded = !list.classList.contains('collapsed');
+
+	toggle.textContent = chrome.i18n.getMessage('otherSiteSnapshots', [String(otherCount)]);
+	toggle.disabled = otherCount === 0;
+	toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+}
+
+function toggleOtherItems() {
+	var list = byId('otherItems');
+	list.classList.toggle('collapsed');
+	updateOtherToggle(list.children.length);
+}
+
+function getActiveTabSource(callback) {
+	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+		callback(getTabSource(tabs && tabs.length ? tabs[0] : null));
+	});
+}
+
+function isCurrentSiteItem(item, currentSource) {
+	return !!(item && item.origin && currentSource && currentSource.origin && item.origin === currentSource.origin);
+}
+
+function compareUpdatedDesc(a, b) {
+	var aTime = Date.parse((a && (a.updatedAt || a.createdAt)) || 0) || 0;
+	var bTime = Date.parse((b && (b.updatedAt || b.createdAt)) || 0) || 0;
+	return bTime - aTime;
 }
 
 function fill(id) {

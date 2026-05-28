@@ -20,7 +20,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 });
 
 function queryData() {
-	var nodes = document.querySelectorAll('input, textarea, select');
+	var nodes = document.querySelectorAll('input, textarea, select, [contenteditable]');
 	var out = [];
 
 	for (var i = 0; i < nodes.length; i++) {
@@ -30,6 +30,7 @@ function queryData() {
 
 		var tag = (el.tagName || '').toLowerCase();
 		var type = (el.getAttribute('type') || '').toLowerCase();
+		var isEditable = isContentEditableField(el);
 
 		// Skip sensitive/irrelevant inputs
 		if (tag === 'input') {
@@ -44,6 +45,8 @@ function queryData() {
 			value = !!el.checked;
 		} else if (tag === 'select' && el.multiple) {
 			value = getSelectedValues(el);
+		} else if (isEditable) {
+			value = el.textContent || '';
 		} else {
 			value = el.value;
 		}
@@ -102,6 +105,12 @@ function applyValue(el, value) {
 	var tag = (el.tagName || '').toLowerCase();
 	var type = (el.getAttribute('type') || '').toLowerCase();
 
+	if (isContentEditableField(el)) {
+		applyContentEditableValue(el, value);
+		dispatch(el, 'input');
+		return;
+	}
+
 	if (tag === 'input' && (type === 'checkbox' || type === 'radio') && typeof value === 'boolean') {
 		el.checked = value;
 		dispatch(el, 'change');
@@ -125,6 +134,28 @@ function dispatch(el, type) {
 	try {
 		el.dispatchEvent(new Event(type, {bubbles: true}));
 	} catch (e) {}
+}
+
+function applyContentEditableValue(el, value) {
+	var text = typeof value === 'undefined' ? '' : String(value);
+	var inserted = false;
+
+	try {
+		el.focus();
+		var selection = window.getSelection && window.getSelection();
+		var range = document.createRange && document.createRange();
+
+		if (selection && range) {
+			range.selectNodeContents(el);
+			selection.removeAllRanges();
+			selection.addRange(range);
+			inserted = document.execCommand && document.execCommand('insertText', false, text);
+		}
+	} catch (e) {
+		inserted = false;
+	}
+
+	if (!inserted) el.textContent = text;
 }
 
 function getSelectedValues(el) {
@@ -184,9 +215,8 @@ function findBestElementForRecord(rec) {
 				if (bestFromSel && bestFromSel.el) return bestFromSel;
 				return {el: null, reason: bestFromSel && bestFromSel.reason ? bestFromSel.reason : 'ambiguous'};
 			}
-			return {el: null, reason: 'no_match'};
 		} catch (e) {
-			return {el: null, reason: 'invalid_selector'};
+			if (!rec.meta) return {el: null, reason: 'invalid_selector'};
 		}
 	}
 
@@ -222,6 +252,7 @@ function scoreCandidates(nodeList, rec) {
 	var meta = rec.meta || {};
 	var wantLabel = normalizeStr(meta.label);
 	var wantAria = normalizeStr(meta.ariaLabel);
+	var wantAriaPlaceholder = normalizeStr(meta.ariaPlaceholder);
 	var wantPh = normalizeStr(meta.placeholder);
 	var wantName = meta.name || '';
 	var wantType = meta.type || '';
@@ -253,8 +284,13 @@ function scoreCandidates(nodeList, rec) {
 
 		if (wantType && normalizeInputType(type) === normalizeInputType(wantType)) score += 10;
 
+		if (meta.contentEditable && isContentEditableField(el)) score += 25;
+
 		var aria = normalizeStr(el.getAttribute('aria-label'));
 		if (wantAria && aria && aria === wantAria) score += 30;
+
+		var ariaPlaceholder = normalizeStr(el.getAttribute('aria-placeholder'));
+		if (wantAriaPlaceholder && ariaPlaceholder && ariaPlaceholder === wantAriaPlaceholder) score += 25;
 
 		var ph = normalizeStr(el.getAttribute('placeholder'));
 		if (wantPh && ph && ph === wantPh) score += 25;
@@ -285,6 +321,10 @@ function scoreCandidates(nodeList, rec) {
 function isCompatibleField(el, meta) {
 	if (!meta) return true;
 
+	var actualEditable = isContentEditableField(el);
+	var wantedEditable = !!meta.contentEditable;
+	if (actualEditable || wantedEditable) return actualEditable === wantedEditable;
+
 	var tag = (el.tagName || '').toLowerCase();
 	if (meta.tag && tag !== meta.tag) return false;
 
@@ -301,6 +341,10 @@ function isCompatibleField(el, meta) {
 	}
 
 	return true;
+}
+
+function isContentEditableField(el) {
+	return !!(el && el.isContentEditable);
 }
 
 function normalizeInputType(type) {
@@ -377,9 +421,11 @@ function getFieldMeta(el) {
 		name: el.getAttribute('name') || undefined,
 		placeholder: el.getAttribute('placeholder') || undefined,
 		ariaLabel: el.getAttribute('aria-label') || undefined,
+		ariaPlaceholder: el.getAttribute('aria-placeholder') || undefined,
 		role: el.getAttribute('role') || undefined,
 		autocomplete: el.getAttribute('autocomplete') || undefined,
 		multiple: tag === 'select' ? !!el.multiple : undefined,
+		contentEditable: isContentEditableField(el) || undefined,
 		label: getLabelText(el) || undefined,
 		dataTest: getDataTestId(el) || undefined
 	};

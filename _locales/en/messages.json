@@ -77,6 +77,15 @@
 	"emptyState": {
 		"message": "No saved items yet."
 	},
+	"emptyCurrentSite": {
+		"message": "No saved items for this site yet."
+	},
+	"currentSiteSnapshots": {
+		"message": "Current site ($1): $2"
+	},
+	"otherSiteSnapshots": {
+		"message": "Other sites / unknown source: $1"
+	},
 	"itemFieldCount": {
 		"message": "$1 fields"
 	},

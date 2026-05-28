@@ -47,7 +47,8 @@ img {
 	height: 220px;
 	margin-top: 8px;
 }
-#empty {
+#empty,
+.empty-section {
 	display: none;
 	padding: 10px 8px;
 	color: rgba(0,0,0,0.55);
@@ -61,10 +62,11 @@ img {
 	border: 1px solid rgba(0,0,0,0.15);
 	background: rgba(255,255,255,0.85);
 }
-#items {
+#currentItems,
+#otherItems {
 	margin-top: 3px;
 	list-style-type: none; 
-	padding-left: 15px;
+	padding-left: 0;
 }
 
 .icon-wrapper {
@@ -73,7 +75,8 @@ img {
 	align-items: center;
 }
 
-#items li {
+#currentItems li,
+#otherItems li {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -81,6 +84,45 @@ img {
 	padding: 6px 0;
 	line-height: 22px;
 	border-bottom: 1px dashed rgba(0,0,0,0.35);
+}
+
+.snapshot-section + .snapshot-section {
+	margin-top: 8px;
+}
+
+.section-label,
+.section-toggle {
+	width: 100%;
+	padding: 4px 0;
+	color: rgba(0,0,0,0.72);
+	font-size: 12px;
+	font-weight: 600;
+	text-align: left;
+}
+
+.section-toggle {
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+}
+
+.section-toggle:disabled {
+	cursor: default;
+	opacity: 0.55;
+}
+
+.section-toggle::before {
+	content: "▾";
+	display: inline-block;
+	width: 14px;
+}
+
+.section-toggle[aria-expanded="false"]::before {
+	content: "▸";
+}
+
+.collapsed {
+	display: none;
 }
 
 .item-text {

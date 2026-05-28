@@ -77,6 +77,15 @@
 	"emptyState": {
 		"message": "还没有保存任何项目。"
 	},
+	"emptyCurrentSite": {
+		"message": "当前网站还没有保存项目。"
+	},
+	"currentSiteSnapshots": {
+		"message": "当前网站（$1）：$2 个"
+	},
+	"otherSiteSnapshots": {
+		"message": "其他网站 / 来源未知：$1 个"
+	},
 	"itemFieldCount": {
 		"message": "$1 个字段"
 	},

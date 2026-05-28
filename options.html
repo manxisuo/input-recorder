@@ -11,7 +11,7 @@
 	<main class="page">
 		<header class="header">
 			<h1 id="title"></h1>
-			<p class="subtitle">Input Recorder</p>
+			<p class="subtitle" id="itemCount"></p>
 		</header>
 
 		<section class="card">
@@ -25,6 +25,8 @@
 					<button id="importReplace" class="btn danger" type="button"></button>
 					<button id="importReplaceCancel" class="btn" type="button"></button>
 					<button id="importReplaceConfirm" class="btn danger solid" type="button"></button>
+					<button id="importPreviewCancel" class="btn" type="button"></button>
+					<button id="importPreviewConfirm" class="btn primary" type="button"></button>
 					<input type="file" id="files" name="files[]" accept=".json,application/json" />
 				</div>
 			</div>
@@ -38,6 +40,20 @@
 				<div class="right">
 					<button id="export" class="btn" type="button"></button>
 					<a id="exportLink" class="link" href="backup.json" download="backup.json">download</a>
+				</div>
+			</div>
+		</section>
+
+		<section class="card">
+			<div class="row">
+				<div class="left">
+					<div class="label" id="clearLabel"></div>
+					<div class="hint attention" id="clearHint"></div>
+				</div>
+				<div class="right">
+					<button id="clearAll" class="btn danger" type="button"></button>
+					<button id="clearCancel" class="btn" type="button"></button>
+					<button id="clearConfirm" class="btn danger solid" type="button"></button>
 				</div>
 			</div>
 		</section>

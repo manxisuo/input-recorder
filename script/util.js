@@ -93,12 +93,22 @@ var DbUtil = {
 		});
 	},
 
+	getItemCount: function(callback) {
+		this._getAll(function(items) {
+			callback(Object.keys(items).length);
+		});
+	},
+
 	// 从存储中删除项目
 	deleteItem: function(id, callback) {
 		this._getAll(function(items) {
 			delete items[id];
 			DbUtil._setAll(items, callback);
 		});
+	},
+
+	clearItems: function(callback) {
+		this._setAll({}, callback);
 	},
 
 	// 供 options 导出使用

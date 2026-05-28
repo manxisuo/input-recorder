@@ -86,6 +86,39 @@
 	"optionsTitle": {
 		"message": "选项"
 	},
+	"itemCountSummary": {
+		"message": "当前保存 $1 个项目"
+	},
+	"importPreviewMerge": {
+		"message": "导入文件包含 $1 个项目。确认后将合并到当前数据，不会覆盖已有项目。"
+	},
+	"importPreviewReplace": {
+		"message": "导入文件包含 $1 个项目。确认后将替换所有当前数据。"
+	},
+	"importPreviewMergeBtn": {
+		"message": "确认导入"
+	},
+	"importPreviewReplaceBtn": {
+		"message": "确认替换"
+	},
+	"clearAllLabel": {
+		"message": "清空数据"
+	},
+	"clearAllHint": {
+		"message": "删除本机保存的所有项目。建议先导出备份。"
+	},
+	"clearAllBtn": {
+		"message": "清空全部"
+	},
+	"clearAllConfirm": {
+		"message": "确定要删除所有已保存项目吗？此操作无法撤销。"
+	},
+	"clearAllConfirmBtn": {
+		"message": "确认清空"
+	},
+	"clearAllSuccess": {
+		"message": "已清空所有项目。"
+	},
 	"tipPageNotSupported": {
 		"message": "当前页面不支持使用该扩展，请打开普通的 http(s) 网页后再试。"
 	},

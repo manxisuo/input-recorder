@@ -170,7 +170,7 @@ Acceptance criteria:
 - Dialog copy is localized.
 - The flows remain accessible by keyboard.
 
-### 10. Add stronger options-page data management
+### 10. ✅ Add stronger options-page data management
 
 The options page should make backup and restore behavior more transparent.
 
@@ -180,6 +180,7 @@ Planned improvements:
 - Add import preview before applying changes.
 - Add an explicit clear-all action with confirmation.
 - Keep export filename timestamped and predictable.
+- Completed: options now shows saved item count, previews import file item counts before merge/replace, and supports inline-confirmed clear-all.
 
 Acceptance criteria:
 

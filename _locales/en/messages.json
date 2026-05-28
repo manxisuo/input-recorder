@@ -86,6 +86,39 @@
 	"optionsTitle": {
 		"message": "options"
 	},
+	"itemCountSummary": {
+		"message": "$1 saved items"
+	},
+	"importPreviewMerge": {
+		"message": "This file contains $1 items. Confirm to merge them into your current data without overwriting existing items."
+	},
+	"importPreviewReplace": {
+		"message": "This file contains $1 items. Confirm to replace all current data."
+	},
+	"importPreviewMergeBtn": {
+		"message": "Confirm import"
+	},
+	"importPreviewReplaceBtn": {
+		"message": "Confirm replace"
+	},
+	"clearAllLabel": {
+		"message": "Clear data"
+	},
+	"clearAllHint": {
+		"message": "Delete all saved items on this device. Export a backup first if needed."
+	},
+	"clearAllBtn": {
+		"message": "Clear all"
+	},
+	"clearAllConfirm": {
+		"message": "Delete all saved items? This cannot be undone."
+	},
+	"clearAllConfirmBtn": {
+		"message": "Confirm clear"
+	},
+	"clearAllSuccess": {
+		"message": "All items cleared."
+	},
 	"tipPageNotSupported": {
 		"message": "This page is not supported. Please open a normal http(s) webpage and try again."
 	},

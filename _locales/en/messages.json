@@ -35,6 +35,18 @@
 	"tip_enter_name": {
 		"message": "Enter a new name for this item"
 	},
+	"deleteInlineConfirm": {
+		"message": "Delete this item?"
+	},
+	"actionSave": {
+		"message": "Save"
+	},
+	"actionCancel": {
+		"message": "Cancel"
+	},
+	"actionDelete": {
+		"message": "Delete"
+	},
 	"importLabel": {
 		"message": "Import items"
 	},
@@ -55,6 +67,9 @@
 	},
 	"importReplaceConfirm": {
 		"message": "Replace all saved items with this file? This will delete the current data."
+	},
+	"importReplaceConfirmBtn": {
+		"message": "Confirm replace"
 	},
 	"importReplaceSuccess": {
 		"message": "Replaced all data: imported $1 items."

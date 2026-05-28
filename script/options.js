@@ -14,8 +14,16 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 
 		byId('importReplace').addEventListener('click', function() {
-			if (!window.confirm(chrome.i18n.getMessage('importReplaceConfirm'))) return;
+			setReplaceConfirming(true);
+		});
+
+		byId('importReplaceCancel').addEventListener('click', function() {
+			setReplaceConfirming(false);
+		});
+
+		byId('importReplaceConfirm').addEventListener('click', function() {
 			importMode = 'replace';
+			setReplaceConfirming(false);
 			byId('files').click();
 		});
 
@@ -68,7 +76,10 @@ function initUIText() {
 	byId('exportLink').textContent = chrome.i18n.getMessage('exportLink');
 	byId('import').textContent = chrome.i18n.getMessage('importBtn');
 	byId('importReplace').textContent = chrome.i18n.getMessage('importReplaceBtn');
+	byId('importReplaceCancel').textContent = chrome.i18n.getMessage('actionCancel');
+	byId('importReplaceConfirm').textContent = chrome.i18n.getMessage('importReplaceConfirmBtn');
 	byId('export').textContent = chrome.i18n.getMessage('exportBtn');
+	setReplaceConfirming(false);
 }
 
 function showTip(msg) {
@@ -120,7 +131,24 @@ function byId(id) {
 
 function resetFileInput() {
 	importMode = 'merge';
+	setReplaceConfirming(false);
 	try { byId('files').value = ''; } catch (e3) {}
+}
+
+function setReplaceConfirming(isConfirming) {
+	byId('import').style.display = isConfirming ? 'none' : 'inline-flex';
+	byId('importReplace').style.display = isConfirming ? 'none' : 'inline-flex';
+	byId('importReplaceCancel').style.display = isConfirming ? 'inline-flex' : 'none';
+	byId('importReplaceConfirm').style.display = isConfirming ? 'inline-flex' : 'none';
+
+	var tip = byId('tip');
+	if (tip && isConfirming) {
+		tip.textContent = chrome.i18n.getMessage('importReplaceConfirm');
+		tip.style.display = 'block';
+		clearTimeout(showTip._t);
+	} else if (tip && !isConfirming && tip.textContent === chrome.i18n.getMessage('importReplaceConfirm')) {
+		tip.style.display = 'none';
+	}
 }
 
 function formatImportSummary(summary) {

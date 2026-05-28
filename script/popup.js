@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initUIText() {
-	byId('lblSavedItems').textContent = chrome.i18n.getMessage('labelSavedItems');
 	byId('add').setAttribute('title', chrome.i18n.getMessage('tipAdd'));
 	byId('options').setAttribute('title', chrome.i18n.getMessage('tipOptions'));
 	byId('newItemName').setAttribute('placeholder', chrome.i18n.getMessage('hintAdd'));
@@ -70,35 +69,48 @@ function addNewItem() {
 }
 
 function delItem(id) {
-	var sure = window.confirm(chrome.i18n.getMessage('tip_confirm_delete'));
-	
-	if (!sure) return;
-
-	// UI
-	var el = document.getElementById(String(id));
-	if (el && el.parentNode) el.parentNode.removeChild(el);
-	
-	// Mem
 	DbUtil.deleteItem(id, loadItems);
 }
 
 function editItemName(item) {
-	var desc = window.prompt(chrome.i18n.getMessage('tip_enter_name'), item.name);
-	
-	desc = (desc || '').trim();
-	if (!desc) return;
-	
-	// UI
 	var row = document.getElementById(String(item.id));
-	if (row) {
-		var nameEl = row.querySelector('.item-name');
-		if (nameEl) nameEl.textContent = desc;
-	}
-	
-	// Mem
-	item.name = desc;
-	DbUtil.setItem(item);
-	
+	if (!row) return;
+
+	row.classList.add('editing');
+	var textWrap = row.querySelector('.item-text');
+	var iconWrap = row.querySelector('.icon-wrapper');
+	if (!textWrap || !iconWrap) return;
+
+	textWrap.innerHTML = '';
+	iconWrap.innerHTML = '';
+
+	var input = document.createElement('input');
+	input.className = 'inline-input';
+	input.type = 'text';
+	input.value = item.name || '';
+	input.setAttribute('aria-label', chrome.i18n.getMessage('tip_enter_name'));
+	textWrap.appendChild(input);
+
+	iconWrap.appendChild(makeTextButton(chrome.i18n.getMessage('actionSave'), 'primary', function() {
+		saveItemName(item, input.value);
+	}));
+	iconWrap.appendChild(makeTextButton(chrome.i18n.getMessage('actionCancel'), '', loadItems));
+
+	input.addEventListener('keydown', function(e) {
+		if (e.key === 'Enter') saveItemName(item, input.value);
+		if (e.key === 'Escape') loadItems();
+	});
+
+	input.focus();
+	input.select();
+}
+
+function saveItemName(item, value) {
+	var name = (value || '').trim();
+	if (!name) return;
+
+	item.name = name;
+	DbUtil.setItem(item, loadItems);
 }
 
 function updateItem(item) {
@@ -196,21 +208,43 @@ function makeItemUI(item) {
 	var iconSpan = document.createElement('span');
 	iconSpan.className = 'icon-wrapper';
 
-	iconSpan.appendChild(makeIconButton('img/insert.png', chrome.i18n.getMessage('tipRestore'), function() {
+	iconSpan.appendChild(makeIconButton('img/fill.svg', chrome.i18n.getMessage('tipRestore'), function() {
 		fill(item.id);
 	}));
-	iconSpan.appendChild(makeIconButton('img/edit.png', chrome.i18n.getMessage('tipRename'), function() {
+	iconSpan.appendChild(makeIconButton('img/edit.svg', chrome.i18n.getMessage('tipRename'), function() {
 		editItemName(item);
 	}));
-	iconSpan.appendChild(makeIconButton('img/update.png', chrome.i18n.getMessage('tipUpdate'), function() {
+	iconSpan.appendChild(makeIconButton('img/refresh.svg', chrome.i18n.getMessage('tipUpdate'), function() {
 		updateItem(item);
 	}));
-	iconSpan.appendChild(makeIconButton('img/delete.png', chrome.i18n.getMessage('tipDel'), function() {
-		delItem(item.id);
+	iconSpan.appendChild(makeIconButton('img/trash.svg', chrome.i18n.getMessage('tipDel'), function() {
+		showDeleteConfirm(li, item);
 	}));
 
 	li.appendChild(iconSpan);
 	return li;
+}
+
+function showDeleteConfirm(row, item) {
+	if (!row) return;
+
+	row.classList.add('confirming-delete');
+	var textWrap = row.querySelector('.item-text');
+	var iconWrap = row.querySelector('.icon-wrapper');
+	if (!textWrap || !iconWrap) return;
+
+	textWrap.innerHTML = '';
+	iconWrap.innerHTML = '';
+
+	var message = document.createElement('span');
+	message.className = 'confirm-text';
+	message.textContent = chrome.i18n.getMessage('deleteInlineConfirm');
+	textWrap.appendChild(message);
+
+	iconWrap.appendChild(makeTextButton(chrome.i18n.getMessage('actionCancel'), '', loadItems));
+	iconWrap.appendChild(makeTextButton(chrome.i18n.getMessage('actionDelete'), 'danger', function() {
+		delItem(item.id);
+	}));
 }
 
 function queryData(callback) {
@@ -380,6 +414,15 @@ function makeIconButton(iconSrc, title, onClick) {
 	img.src = iconSrc;
 	img.alt = '';
 	btn.appendChild(img);
+	return btn;
+}
+
+function makeTextButton(label, variant, onClick) {
+	var btn = document.createElement('button');
+	btn.type = 'button';
+	btn.className = 'text-btn' + (variant ? ' ' + variant : '');
+	btn.textContent = label;
+	btn.addEventListener('click', onClick);
 	return btn;
 }
 

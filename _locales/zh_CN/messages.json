@@ -35,6 +35,18 @@
 	"tip_enter_name": {
 		"message": "请输入新的名称"
 	},
+	"deleteInlineConfirm": {
+		"message": "确定删除这个项目？"
+	},
+	"actionSave": {
+		"message": "保存"
+	},
+	"actionCancel": {
+		"message": "取消"
+	},
+	"actionDelete": {
+		"message": "删除"
+	},
 	"importLabel": {
 		"message": "导入项目"
 	},
@@ -55,6 +67,9 @@
 	},
 	"importReplaceConfirm": {
 		"message": "确定要用这个文件替换所有已保存项目吗？此操作会删除当前数据。"
+	},
+	"importReplaceConfirmBtn": {
+		"message": "确认替换"
 	},
 	"importReplaceSuccess": {
 		"message": "已替换全部数据：导入 $1 个项目。"

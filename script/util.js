@@ -104,15 +104,86 @@ var DbUtil = {
 	// 供 options 导出使用
 	getItemsString: function(callback) {
 		this._getAll(function(items) {
-			callback(JSON.stringify(items));
+			callback(JSON.stringify(items, null, 2));
 		});
 	},
 
 	// 供 options 导入使用
 	setItemsString: function(content, callback) {
 		var parsed = JSON.parse(content);
-		if (!parsed || typeof parsed !== 'object') parsed = {};
-		this._setAll(parsed, callback);
+		if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+			if (callback) callback({total: 0, added: 0, conflicts: 0, skipped: 0, invalid: true});
+			return;
+		}
+		this.mergeItems(parsed, callback);
+	},
+
+	replaceItemsString: function(content, callback) {
+		var parsed = JSON.parse(content);
+		if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+			if (callback) callback({total: 0, replaced: 0, invalid: true});
+			return;
+		}
+
+		var summary = {
+			total: Object.keys(parsed).length,
+			replaced: Object.keys(parsed).length
+		};
+
+		this._setAll(parsed, function() {
+			if (callback) callback(summary);
+		});
+	},
+
+	mergeItems: function(importedItems, callback) {
+		if (!importedItems || typeof importedItems !== 'object' || Array.isArray(importedItems)) {
+			if (callback) callback({total: 0, added: 0, conflicts: 0, skipped: 0});
+			return;
+		}
+
+		this._getAll(function(items) {
+			var keys = Object.keys(importedItems);
+			var summary = {
+				total: keys.length,
+				added: 0,
+				conflicts: 0,
+				skipped: 0
+			};
+
+			for (var i = 0; i < keys.length; i++) {
+				var key = keys[i];
+				var item = importedItems[key];
+
+				if (!item || typeof item !== 'object' || Array.isArray(item)) {
+					summary.skipped++;
+					continue;
+				}
+
+				var targetKey = String(key);
+				if (Object.prototype.hasOwnProperty.call(items, targetKey)) {
+					summary.conflicts++;
+					targetKey = DbUtil._newItemId(items);
+					item.id = Number(targetKey);
+				} else if (typeof item.id === 'undefined' || String(item.id) !== targetKey) {
+					item.id = isNaN(Number(targetKey)) ? targetKey : Number(targetKey);
+				}
+
+				items[targetKey] = item;
+				summary.added++;
+			}
+
+			DbUtil._setAll(items, function() {
+				if (callback) callback(summary);
+			});
+		});
+	},
+
+	_newItemId: function(items) {
+		var id = new Date().getTime();
+		while (Object.prototype.hasOwnProperty.call(items, String(id))) {
+			id++;
+		}
+		return String(id);
 	},
 
 	isJSON: function(str) {

@@ -39,7 +39,7 @@
 		"message": "导入项目"
 	},
 	"importAttention": {
-		"message": "(将会覆盖已存在项目！)"
+		"message": "(默认合并导入，不会覆盖已存在项目。)"
 	},
 	"exportLabel": {
 		"message": "导出项目"
@@ -50,11 +50,20 @@
 	"importBtn": {
 		"message": "导入"
 	},
+	"importReplaceBtn": {
+		"message": "替换全部"
+	},
+	"importReplaceConfirm": {
+		"message": "确定要用这个文件替换所有已保存项目吗？此操作会删除当前数据。"
+	},
+	"importReplaceSuccess": {
+		"message": "已替换全部数据：导入 $1 个项目。"
+	},
 	"exportBtn": {
 		"message": "导出"
 	},
 	"importTipSuccess": {
-		"message": "导入成功！"
+		"message": "导入完成：新增 $1 个，冲突重命名 $2 个，跳过 $3 个。"
 	},
 	"importTipErrFormat": {
 		"message": "格式错误！"
@@ -70,27 +79,5 @@
 	},
 	"tipRestoreSummary": {
 		"message": "已填充 $1/$2 个字段，已跳过 $3 个。"
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	}	
 }

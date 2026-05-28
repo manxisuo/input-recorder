@@ -26,7 +26,7 @@ The extension will be available on Chrome Web Store soon.
 
 1. **Download or Clone** this repository
    ```bash
-   git clone https://github.com/yourusername/input-recorder.git
+   git clone https://github.com/manxisuo/input-recorder.git
    cd input-recorder
    ```
 

@@ -26,7 +26,7 @@
 
 1. **下载或克隆**此仓库
    ```bash
-   git clone https://github.com/yourusername/input-recorder.git
+   git clone https://github.com/manxisuo/input-recorder.git
    cd input-recorder
    ```
 

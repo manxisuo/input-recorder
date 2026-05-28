@@ -39,7 +39,7 @@
 		"message": "Import items"
 	},
 	"importAttention": {
-		"message": "(Existing items will be overwritten!)"
+		"message": "(Imports are merged by default. Existing items are not overwritten.)"
 	},
 	"exportLabel": {
 		"message": "Export items"
@@ -50,11 +50,20 @@
 	"importBtn": {
 		"message": "Import"
 	},
+	"importReplaceBtn": {
+		"message": "Replace all"
+	},
+	"importReplaceConfirm": {
+		"message": "Replace all saved items with this file? This will delete the current data."
+	},
+	"importReplaceSuccess": {
+		"message": "Replaced all data: imported $1 items."
+	},
 	"exportBtn": {
 		"message": "Export"
 	},
 	"importTipSuccess": {
-		"message": "Import successfully!"
+		"message": "Import complete: added $1, renamed conflicts $2, skipped $3."
 	},
 	"importTipErrFormat": {
 		"message": "Format error!"
@@ -70,19 +79,5 @@
 	},
 	"tipRestoreSummary": {
 		"message": "Restored $1/$2 fields. Skipped $3."
-	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+	}	
 }

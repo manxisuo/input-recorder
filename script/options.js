@@ -1,6 +1,6 @@
-var IMPORT_TIP_SUCCESS = chrome.i18n.getMessage('importTipSuccess');
 var IMPORT_TIP_ERR_FORMAT = chrome.i18n.getMessage('importTipErrFormat');
 var exportObjectUrl = null;
+var importMode = 'merge';
 
 document.addEventListener('DOMContentLoaded', function() {
 	DbUtil.ensure(function() {
@@ -9,6 +9,13 @@ document.addEventListener('DOMContentLoaded', function() {
 		byId('files').addEventListener('change', handleFileSelect);
 
 		byId('import').addEventListener('click', function() {
+			importMode = 'merge';
+			byId('files').click();
+		});
+
+		byId('importReplace').addEventListener('click', function() {
+			if (!window.confirm(chrome.i18n.getMessage('importReplaceConfirm'))) return;
+			importMode = 'replace';
 			byId('files').click();
 		});
 
@@ -60,6 +67,7 @@ function initUIText() {
 	byId('exportLabel').textContent = chrome.i18n.getMessage('exportLabel');
 	byId('exportLink').textContent = chrome.i18n.getMessage('exportLink');
 	byId('import').textContent = chrome.i18n.getMessage('importBtn');
+	byId('importReplace').textContent = chrome.i18n.getMessage('importReplaceBtn');
 	byId('export').textContent = chrome.i18n.getMessage('exportBtn');
 }
 
@@ -86,14 +94,19 @@ function handleFileSelect(e) {
 
 				if (!DbUtil.isJSON(content)) {
 					showTip(IMPORT_TIP_ERR_FORMAT);
+					resetFileInput();
 					return;
 				}
 
-				DbUtil.setItemsString(content, function() {
-					showTip(IMPORT_TIP_SUCCESS);
-					// allow importing the same file again
-					try { byId('files').value = ''; } catch (e3) {}
-				});
+				var mode = importMode;
+				var done = function(summary) {
+					if (summary && summary.invalid) showTip(IMPORT_TIP_ERR_FORMAT);
+					else showTip(mode === 'replace' ? formatReplaceSummary(summary) : formatImportSummary(summary));
+					resetFileInput();
+				};
+
+				if (mode === 'replace') DbUtil.replaceItemsString(content, done);
+				else DbUtil.setItemsString(content, done);
 			}
 		})();
 		
@@ -103,4 +116,25 @@ function handleFileSelect(e) {
 
 function byId(id) {
 	return document.getElementById(id);
+}
+
+function resetFileInput() {
+	importMode = 'merge';
+	try { byId('files').value = ''; } catch (e3) {}
+}
+
+function formatImportSummary(summary) {
+	summary = summary || {};
+	return chrome.i18n.getMessage('importTipSuccess', [
+		String(summary.added || 0),
+		String(summary.conflicts || 0),
+		String(summary.skipped || 0)
+	]);
+}
+
+function formatReplaceSummary(summary) {
+	summary = summary || {};
+	return chrome.i18n.getMessage('importReplaceSuccess', [
+		String(summary.replaced || 0)
+	]);
 }
